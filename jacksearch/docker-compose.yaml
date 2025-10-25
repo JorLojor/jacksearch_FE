@@ -1,0 +1,24 @@
+services:
+  web:
+    build:
+      context: .                               
+      dockerfile: Dockerfile
+    container_name: jacksearch_frontend     
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.jacksearch-frontend.rule=Host(`jacksearch.space`)"
+      - "traefik.http.routers.jacksearch-frontend.entrypoints=websecure"
+      - "traefik.http.routers.jacksearch-frontend.tls=true"
+        # ini gue nga tau dia bisa di pasang bisa nga
+        #- "traefik.http.routers.jacksearch-frontend.tls.certresolver=le"
+        #- "traefik.http.services.jacksearch-frontend.loadbalancer.server.port=80"
+
+networks:
+  proxy:
+    external: true
+
+
+# jacksearch.space
