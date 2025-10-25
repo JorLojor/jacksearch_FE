@@ -1,0 +1,51 @@
+name: Deploy FE (Build on Server)
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "jacksearch/**"        
+      - ".github/workflows/deploy.yml"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add server to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -p ${SSH_PORT:-22} ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: SSH into server & deploy
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            set -euo pipefail
+
+            APP_DIR="/srv/apps/jacksearch"      
+            REPO_URL="${{ github.server_url }}/${{ github.repository }}.git"
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              mkdir -p "$APP_DIR"
+              git clone "$REPO_URL" "$APP_DIR"
+            fi
+
+            cd "$APP_DIR"
+            git fetch origin
+            git checkout main
+            git reset --hard origin/main
+            cd jacksearch                     
+
+            if [ ! -f .env ]; then
+              echo "APP_DOMAIN=${{ secrets.APP_DOMAIN }}" > .env
+            fi
+            export $(grep -v '^#' .env | xargs || true)
+
+            docker network create traefik_proxy || true
+            docker compose --env-file .env up -d --build
+            docker image prune -f
