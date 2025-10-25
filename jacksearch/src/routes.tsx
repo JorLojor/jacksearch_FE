@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, Outlet } from "react-router-dom";
-import Navbar from "./components/Navbar";
+
+// import Navbar from "./components/Navbar";
 
 const HomePage = lazy(() => import("./pages/home/index"));
 const NotFoundPage = lazy(() => import("./pages/not-found"));
@@ -8,7 +9,7 @@ const NotFoundPage = lazy(() => import("./pages/not-found"));
 function RootLayout() {
 	return (
 		<div className="min-h-screen bg-gray-50 text-gray-900">
-			<Navbar />
+			{/* <Navbar /> */}
 			<main>
 				<Outlet />
 			</main>
